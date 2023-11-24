@@ -1,8 +1,6 @@
 const feathers = require("@feathersjs/feathers");
 const express = require("@feathersjs/express");
 const socketio = require("@feathersjs/socketio");
-const level = require("level");
-const db = level("./db", { valueEncoding: "json" });
 var path = require("path");
 
 var serveIndex = require('serve-index');
@@ -10,7 +8,6 @@ var serveIndex = require('serve-index');
     
 // Image Kit
 const ImageKit = require("imagekit");
-const fs = require('fs')
 var imagekit = new ImageKit({
   publicKey : "public_DYilnmhVRFXigmTUrGtuCcGZpok=",
   privateKey : "private_8TVOnRhhlGeWW4/sSOZXtleIo/Y=",
@@ -89,13 +86,6 @@ app.get("/load", function (req, res) {
 
 app.use('/img', serveIndex('public/img',  {icons: true, view: 'details'}) );
 
-/*
-app.get("/game", function (req, res) {
-  res.sendFile(path.join(__dirname + "/public/game.html"));
-});
-*/
-
-
 app.get("/room/:roomId", function (req, res) {
   app.use(`/room/${req.params.roomId}`, new MessageService());
   //sending file
@@ -127,26 +117,10 @@ app.get('/signature', (req, res) => {
 })
 // ----
 
-//saving data from room
-app.post("/save", function (req, res) {
-  var room_id = req.body.id;
-  var background = req.body.background;
-
-  //saving data to level
-  db.put(room_id, { background: background }, function (err) {
-    if (err) throw err;
-
-    db.get(room_id, function (err, value) {
-      if (err) throw err;
-      console.log(value);
-      res.send("hello").status(200);
-    });
-  });
-});
-
 // Start the server
+var port = process.env.PORT || 3000
 app
-  .listen(process.env.PORT || 3000)
+  .listen(port)
   .on("listening", () =>
-    console.log("Feathers server listening on localhost:3000")
+    console.log("Feathers server listening on localhost:" + port)
   );
