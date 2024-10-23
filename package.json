@@ -11,8 +11,8 @@
   "author": "Fernando Setien Dodero",
   "license": "GNU GPLv3",
   "dependencies": {
-    "@feathersjs/express": "^4.5.2",
-    "@feathersjs/feathers": "^4.5.2",
+    "@feathersjs/express": "^4.5.18",
+    "@feathersjs/feathers": "^4.5.18",
     "@feathersjs/socketio": "^4.5.18",
     "body-parser": "^1.20.2",
     "bulma": "^0.8.1",
