@@ -2021,13 +2021,14 @@ function clearRoll() {
 function rollDie(sides)
 {
   if(!sides) sides = 6;
+  
   if(sides == 100)
-    with(Math) return 1 + floor(random() * 10);
+    return 1 + Math.floor(Math.random() * 10);
   
   if(sides == 7)
-    with(Math) return 1 + floor(random() * 6);
+    return 1 + Math.floor(Math.random() * 6);
   
-  with(Math) return 1 + floor(random() * sides);
+  return 1 + Math.floor(Math.random() * sides);
 }
 
 function rollDice(number, sides)
@@ -2794,11 +2795,14 @@ canvas.on("mouse:move", function (opt) {
   }
   if(opt.e.which == 1) {
 
-    var x = Math.abs(5 * Math.trunc((opt.pointer.x - this.lastPosX)/(zoom*tileSize)));
-    var y = Math.abs(5 * Math.trunc((opt.pointer.y - this.lastPosY)/(zoom*tileSize)));   
+    var measure_units = document.getElementById("measurement-units").value;
+    var measure_tile = document.getElementById("measurement-tile").value;
+
+    var x = Math.abs(measure_tile * Math.trunc((opt.pointer.x - this.lastPosX)/(zoom*tileSize)));
+    var y = Math.abs(measure_tile * Math.trunc((opt.pointer.y - this.lastPosY)/(zoom*tileSize)));   
     try {
       if (lastdx !== x || lastdy !== y )
-      document.getElementById("distance-bar").innerHTML = x + "ft<br>" + y + "ft";
+      document.getElementById("distance-bar").innerHTML = x + " " + measure_units + "<br>" + y + " " + measure_units;
     
     } catch(error) {}
        
