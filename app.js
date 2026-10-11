@@ -53,6 +53,12 @@ class MessageService {
 // Creates an ExpressJS compatible Feathers application
 const app = express(feathers());
 
+// Spell Sheet
+app.use(
+  "/spells",
+  express.static(path.join(__dirname, "spell-sheet"))
+);
+
 // Parse HTTP JSON bodies
 app.use(express.json());
 // Parse URL-encoded params
@@ -71,6 +77,7 @@ app.on("connection", (connection) => app.channel("everybody").join(connection));
 // Publish all events to the `everybody` channel
 app.publish((data) => app.channel("everybody"));
 //
+
 
 //express route
 app.get("/", function (req, res) {
