@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Turn a D&D Beyond character PDF into a compact printable spell reference."><title>Spell Sheet</title><link rel="stylesheet" href="style.css"><script type="module" src="app.js"></script></head>
+<body>
+<nav class="masthead" aria-label="App header"><div class="masthead-inner"><a class="brand" href="./"><svg viewBox="0 0 32 36" aria-hidden="true"><path d="M16 2 29 9v16l-13 9L3 25V9Z M3 9l13 8 13-8 M16 17v17 M3 25l13-8 13 8 M16 2v15"/></svg><span>SPELL<span class="brand-accent">SHEET</span></span></a><span class="masthead-note">YOUR TABLETOP COMPANION</span></div></nav>
+<div class="workspace">
+<section class="controls" aria-labelledby="app-title">
+<div class="hero"><span class="eyebrow">CHARACTER TO PAPER</span><h1 id="app-title">Less searching.<br>More spellcasting.</h1><p class="intro">All your character’s spells. Short descriptions.<br>A reference sheet ready for your next session.</p><div class="hero-meta"><span>PHB ’24 + XGE</span><span>487 spells</span><span>A4 print layout</span></div></div>
+<div class="upload-card"><div class="card-heading"><span class="step-number">01</span><div><h2>Bring your spellbook</h2><p>Export your D&D Beyond character PDF with all spells included.</p></div></div><form id="upload-form"><label for="character-file">Character sheet PDF</label><input id="character-file" type="file" accept=".pdf,application/pdf" required><button type="submit">Generate spell sheet <span aria-hidden="true">→</span></button></form><p class="privacy-note"><span aria-hidden="true">◇</span> Your PDF stays in your browser.</p><p id="status" role="status" aria-live="polite">Choose a character sheet to begin.</p></div>
+</section>
+<div class="sheet-tools" hidden><div><span class="eyebrow">SESSION REFERENCE</span><h2>Your spell sheet</h2></div><button id="print-sheet" type="button">Print sheet <span aria-hidden="true">↗</span></button></div>
+<div id="output"></div>
+<div id="empty-state"><div class="empty-icon" aria-hidden="true">✧</div><h2>Your next session, on one sheet.</h2><p>Upload your character to see spells grouped by level,<br>with effects, casting time, range, and duration.</p><div class="empty-columns" aria-hidden="true"><span>SPELL</span><span>EFFECT</span><span>TIME · RANGE · DURATION</span></div></div>
+<footer class="data-credit">An independent spell reference tool. Data: <a href="https://github.com/5e-bits/5e-srd-api/blob/main/packages/5e-database/src/2024/en/5e-SRD-Spells.json" target="_blank" rel="noopener noreferrer">5e-bits 2024 SRD</a> and your PHB’24 / XGE library.<br>Summaries cover core effects; consult full rules for exceptions and scaling.</footer>
+</div>
+</body></html>
