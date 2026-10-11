@@ -1,12 +1,15 @@
 export const cleanSpellName = name => String(name).replace(/\s*\[R\]/gi,'').trim();
 export const normalizeName = name => cleanSpellName(name).normalize('NFKC').replace(/[’‘]/g,"'").replace(/\s*\(legacy\)\s*$/i,'').replace(/\s+/g,' ').trim().toLowerCase();
-export function findSummary(spell,library) {
+export function findSummary(spell,library,language='en') {
   // Deliberately use the current library version regardless of the PDF's book/edition.
   const entries=Object.values(library.spells || {}).filter(entry=>
     normalizeName(entry.name)===normalizeName(spell.name) &&
     (entry.legacy===false || (entry.legacy==null && entry.definition?.isLegacy===false)));
   const withSummary=entries.filter(entry=>typeof entry.summary==='string' && entry.summary.trim());
-  if(withSummary.length)return {summary:withSummary[0].summary,status:'matched'};
+  if(withSummary.length) {
+    const entry=withSummary[0],translated=library.translations?.[language]?.summaries?.[entry.id];
+    return {summary:typeof translated==='string' && translated.trim()?translated:entry.summary,status:'matched'};
+  }
   const withDescription=entries.find(entry=>typeof entry.description==='string' && entry.description.trim());
   if(withDescription)return {summary:withDescription.description,status:'description'};
   return {summary:null,status:'missing'};
