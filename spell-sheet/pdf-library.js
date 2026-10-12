@@ -24,3 +24,10 @@ export function uniqueSpellsByName(spells) {
   }
   return [...unique.values()];
 }
+
+export function renderSlotBoxes(level,spellSlots={}) {
+  if(!Number.isInteger(level) || level<1 || level>9)return '';
+  const count=spellSlots[level];
+  if(!Number.isInteger(count) || count<0 || count>99)return '';
+  return `<span class="slot-count">${count} ${count===1?'slot':'slots'}</span><span class="slot-boxes" aria-label="${count} spell slots">${'<span class="checkbox slot-checkbox"></span>'.repeat(count)}</span>`;
+}
