@@ -1,9 +1,11 @@
+import {extractClassLevels} from './preparation.js';
 export function parseSpellFields(pages) {
- let level=null,name='Character';const spells=[],spellcasting=[],warnings=[],spellSlots={};
+ let level=null,name='Character';const spells=[],spellcasting=[],warnings=[],spellSlots={},classLevels={};
  for(const page of pages){
   const fields=new Map(page.annotations.map(a=>[a.name ?? a.fieldName,a]));
   const value=k=>String(fields.get(k)?.value ?? fields.get(k)?.fieldValue ?? '').trim();
   if(value('CharacterName'))name=value('CharacterName');
+  for(const [field,annotation] of fields)if(/^CLASS\s+LEVEL\d*$/i.test(field))Object.assign(classLevels,extractClassLevels(annotation.value ?? annotation.fieldValue ?? '')); 
   if(value('spellCastingClass0'))spellcasting.push({class:value('spellCastingClass0'),ability:value('spellCastingAbility0'),saveDc:value('spellSaveDC0'),attackBonus:value('spellAtkBonus0'),page:page.number});
   const rows=page.annotations.filter(a=>/^spell(Name|Header)\d+$/.test(a.name ?? a.fieldName)).sort((a,b)=>b.rect[3]-a.rect[3]);
   for(const row of rows){
@@ -22,6 +24,6 @@ export function parseSpellFields(pages) {
   }
  }
  if(!spells.length)throw new Error('No editable D&D Beyond spell fields found. Flattened or scanned PDFs need text/OCR parsing.');
- return {name,spellcasting,spells,spellSlots,warnings};
+ return {name,spellcasting,spells,spellSlots,classLevels,warnings};
 }
 export async function extractPdfSpells(pdf){const pages=[];for(let n=1;n<=pdf.numPages;n++){const p=await pdf.getPage(n);pages.push({number:n,annotations:await p.getAnnotations()});}return parseSpellFields(pages);}

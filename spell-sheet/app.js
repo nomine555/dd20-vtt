@@ -1,3 +1,4 @@
+import {preparationLimit} from './preparation.js';
 import {getDocument,GlobalWorkerOptions} from './vendor/pdf.mjs';
 import {extractPdfSpells} from './pdf-spell-parser.js';
 import {findSummary,uniqueSpellsByName,renderSlotBoxes} from './pdf-library.js';
@@ -48,7 +49,7 @@ function render(character,library) {
     }
   }
   const classes=[...new Map(character.spellcasting.map(c=>[`${c.class}|${c.saveDc}|${c.attackBonus}`,c])).values()];
-  const stats=classes.map(c=>`<div class="casting-group"><span class="casting-class">${e(c.class)}</span><div class="combat"><p>ATTACK<strong>${e(c.attackBonus || '____')}</strong></p><p>SAVE DC<strong>${e(c.saveDc || '____')}</strong></p></div></div>`).join('');
+  const stats=classes.map(c=>`<div class="casting-group"><span class="casting-class">${e(c.class)}</span><div class="combat"><p>ATTACK<strong>${e(c.attackBonus || '____')}</strong></p><p>SAVE DC<strong>${e(c.saveDc || '____')}</strong></p><p title="2024 base class limit; always-prepared and bonus spells are excluded">PREPARED MAX<strong>${e(preparationLimit(c.class,character.classLevels) ?? '—')}</strong></p></div></div>`).join('');
   output.innerHTML=`<header class="sheet-header"><h1>Spells of ${e(character.name)}</h1><div>${stats}</div></header><main class="table-scroll"><table class="spell-table"><colgroup><col class="check"><col class="name"><col class="description"><col class="time"><col class="range"><col class="duration"></colgroup><thead><tr><th aria-label="Spell checkbox"></th><th>Spell</th><th>Description</th><th>Time</th><th>Range</th><th>Duration</th></tr></thead><tbody>${rows.join('')}</tbody></table></main>`;
   return `${character.spells.length} spell entries extracted. ${matched} summaries matched; ${character.spells.length-matched} are outside the spell library${ambiguous?` (${ambiguous} ambiguous matches)`:''}. Duplicate spell names are combined; descriptions use non-Legacy library entries. Print with Ctrl+P / ⌘P.`;
 }
