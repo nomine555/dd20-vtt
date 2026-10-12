@@ -1,6 +1,6 @@
 import {getDocument,GlobalWorkerOptions} from './vendor/pdf.mjs';
 import {extractPdfSpells} from './pdf-spell-parser.js';
-import {findSummary,uniqueSpellsByName} from './pdf-library.js';
+import {findSummary,uniqueSpellsByName,renderSlotBoxes} from './pdf-library.js';
 import {escape as e} from './core.js';
 GlobalWorkerOptions.workerSrc=new URL('./vendor/pdf.worker.mjs',import.meta.url).href;
 const form=document.querySelector('#upload-form'), button=form.querySelector('button'), status=document.querySelector('#status'), output=document.querySelector('#output');
@@ -37,7 +37,7 @@ function render(character,library) {
   const levels=[...new Set(character.spells.map(s=>s.level))].sort((a,b)=>(a ?? 99)-(b ?? 99));
   for(const level of levels) {
     const spells=character.spells.filter(s=>s.level===level), roman=['','I','II','III','IV','V','VI','VII','VIII','IX'][level] || level;
-    rows.push(`<tr class="level-band"><td colspan="3">${level===null?'LEVEL UNKNOWN':level===0?'CANTRIPS':`LEVEL ${roman}`}</td><td colspan="3" class="level-meta">${spells.length} spell entries</td></tr>`);
+    rows.push(`<tr class="level-band"><td colspan="3">${level===null?'LEVEL UNKNOWN':level===0?'CANTRIPS':`LEVEL ${roman}`}</td><td colspan="3" class="level-meta">${renderSlotBoxes(level,character.spellSlots)}</td></tr>`);
     for(const spell of spells) {
       const result=findSummary(spell,library,languageSelect.value);if(result.summary)matched++;if(result.status==='ambiguous')ambiguous++;
       const flags=[spell.alwaysPrepared?'Always prepared':''].filter(Boolean);
@@ -49,7 +49,7 @@ function render(character,library) {
   }
   const classes=[...new Map(character.spellcasting.map(c=>[`${c.class}|${c.saveDc}|${c.attackBonus}`,c])).values()];
   const stats=classes.map(c=>`<div class="casting-group"><span class="casting-class">${e(c.class)}</span><div class="combat"><p>ATTACK<strong>${e(c.attackBonus || '____')}</strong></p><p>SAVE DC<strong>${e(c.saveDc || '____')}</strong></p></div></div>`).join('');
-  output.innerHTML=`<header class="sheet-header"><h1>Spells of ${e(character.name)}</h1><div>${stats}</div></header><main class="table-scroll"><table class="spell-table"><colgroup><col class="check"><col class="name"><col class="description"><col class="time"><col class="range"><col class="duration"></colgroup><thead><tr><th>Use</th><th>Spell</th><th>Description</th><th>Time</th><th>Range</th><th>Duration</th></tr></thead><tbody>${rows.join('')}</tbody></table></main>`;
+  output.innerHTML=`<header class="sheet-header"><h1>Spells of ${e(character.name)}</h1><div>${stats}</div></header><main class="table-scroll"><table class="spell-table"><colgroup><col class="check"><col class="name"><col class="description"><col class="time"><col class="range"><col class="duration"></colgroup><thead><tr><th aria-label="Spell checkbox"></th><th>Spell</th><th>Description</th><th>Time</th><th>Range</th><th>Duration</th></tr></thead><tbody>${rows.join('')}</tbody></table></main>`;
   return `${character.spells.length} spell entries extracted. ${matched} summaries matched; ${character.spells.length-matched} are outside the spell library${ambiguous?` (${ambiguous} ambiguous matches)`:''}. Duplicate spell names are combined; descriptions use non-Legacy library entries. Print with Ctrl+P / ⌘P.`;
 }
 form.addEventListener('submit',async event=>{
