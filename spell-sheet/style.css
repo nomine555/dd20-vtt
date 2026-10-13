@@ -38,3 +38,5 @@ td { padding:1mm .8mm; vertical-align:middle; border-bottom:1px solid #e8e5e0; o
 .language-control { margin-top:22px; display:flex; align-items:center; gap:12px; }.language-control label { margin:0; color:var(--muted); }.language-control select { padding:7px 30px 7px 10px; border:1px solid #c8c3bb; border-radius:3px; color:var(--ink); background:white; font:12px Arial,sans-serif; }.language-control select:focus-visible { outline:3px solid #d99196; outline-offset:3px; }
 
 .slot-count { margin-right:2mm; white-space:nowrap; }.slot-boxes { display:inline-flex; gap:1.3mm; vertical-align:middle; }.slot-checkbox { border-radius:0; border-color:#883038; }.level-band .level-meta { letter-spacing:0; }
+
+.indicator-key { font-size:9px; color:var(--muted); margin:0 0 2mm; }@media print { .indicator-key { font-size:6.5pt; margin-bottom:1mm; } }

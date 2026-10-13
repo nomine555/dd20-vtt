@@ -1,7 +1,7 @@
 import {preparationLimit} from './preparation.js';
 import {getDocument,GlobalWorkerOptions} from './vendor/pdf.mjs';
 import {extractPdfSpells} from './pdf-spell-parser.js';
-import {findSummary,uniqueSpellsByName,renderSlotBoxes} from './pdf-library.js';
+import {findSummary,uniqueSpellsByName,renderSlotBoxes,spellIndicators} from './pdf-library.js';
 import {escape as e} from './core.js';
 GlobalWorkerOptions.workerSrc=new URL('./vendor/pdf.worker.mjs',import.meta.url).href;
 const form=document.querySelector('#upload-form'), button=form.querySelector('button'), status=document.querySelector('#status'), output=document.querySelector('#output');
@@ -44,13 +44,14 @@ function render(character,library) {
       const flags=[spell.alwaysPrepared?'Always prepared':''].filter(Boolean);
       const mechanics=[spell.saveAttack && spell.saveAttack!=='--'?spell.saveAttack:''].filter(Boolean);
       const time={'1A':'Action','1BA':'Bonus action','1R':'Reaction','10m':'10 min','1m':'1 min','1h':'1 hr'}[spell.castingTime] || spell.castingTime;
-      const components=[spell.components,spell.ritual?'[R]':''].filter(Boolean).join(' · ');
+      const indicators=spellIndicators(spell,library);
+      const components=[spell.components,spell.ritual?'[R]':'',indicators.concentration?'[C]':'',indicators.higher?'[H]':''].filter(Boolean).join(' · ');
       rows.push(`<tr class="spell-row"><td><span class="checkbox"></span></td><td>${e(spell.name)}${flags.length?`<div class="spell-flags">${e(flags.join(' · '))}</div>`:''}</td><td>${result.summary?e(result.summary):'<span class="missing-summary">'+(result.status==='ambiguous'?'Summary unavailable: source match is ambiguous.':'Not included in the spell library.')+'</span>'}${mechanics.length?` <span class="mechanics">(${e(mechanics.join(' · '))})</span>`:''}</td><td>${e(time)}${components?`<div class="components">${e(components)}</div>`:''}</td><td>${e(spell.range)}</td><td>${e(spell.duration.replace('Concentration, up to ','C, ').replace(/\bminutes?\b/g,'min').replace(/\bhours?\b/g,'hr'))}</td></tr>`);
     }
   }
   const classes=[...new Map(character.spellcasting.map(c=>[`${c.class}|${c.saveDc}|${c.attackBonus}`,c])).values()];
   const stats=classes.map(c=>`<div class="casting-group"><span class="casting-class">${e(c.class)}</span><div class="combat"><p>ATTACK<strong>${e(c.attackBonus || '____')}</strong></p><p>SAVE DC<strong>${e(c.saveDc || '____')}</strong></p><p title="2024 base class limit; always-prepared and bonus spells are excluded">PREPARED MAX<strong>${e(preparationLimit(c.class,character.classLevels) ?? '—')}</strong></p></div></div>`).join('');
-  output.innerHTML=`<header class="sheet-header"><h1>Spells of ${e(character.name)}</h1><div>${stats}</div></header><main class="table-scroll"><table class="spell-table"><colgroup><col class="check"><col class="name"><col class="description"><col class="time"><col class="range"><col class="duration"></colgroup><thead><tr><th aria-label="Spell checkbox"></th><th>Spell</th><th>Description</th><th>Time</th><th>Range</th><th>Duration</th></tr></thead><tbody>${rows.join('')}</tbody></table></main>`;
+  output.innerHTML=`<header class="sheet-header"><h1>Spells of ${e(character.name)}</h1><div>${stats}</div></header><p class="indicator-key">[R] Ritual · [C] Concentration · [H] Higher-level spell slot option</p><main class="table-scroll"><table class="spell-table"><colgroup><col class="check"><col class="name"><col class="description"><col class="time"><col class="range"><col class="duration"></colgroup><thead><tr><th aria-label="Spell checkbox"></th><th>Spell</th><th>Description</th><th>Time</th><th>Range</th><th>Duration</th></tr></thead><tbody>${rows.join('')}</tbody></table></main>`;
   return `${character.spells.length} spell entries extracted. ${matched} summaries matched; ${character.spells.length-matched} are outside the spell library${ambiguous?` (${ambiguous} ambiguous matches)`:''}. Duplicate spell names are combined; descriptions use non-Legacy library entries. Print with Ctrl+P / ⌘P.`;
 }
 form.addEventListener('submit',async event=>{

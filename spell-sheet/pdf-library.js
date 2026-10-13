@@ -31,3 +31,10 @@ export function renderSlotBoxes(level,spellSlots={}) {
   if(!Number.isInteger(count) || count<0 || count>99)return '';
   return `<span class="slot-count">${count} ${count===1?'slot':'slots'}</span><span class="slot-boxes" aria-label="${count} spell slots">${'<span class="checkbox slot-checkbox"></span>'.repeat(count)}</span>`;
 }
+
+export function spellIndicators(spell,library) {
+ const entry=Object.values(library.spells || {}).find(s=>s.legacy===false && normalizeName(s.name)===normalizeName(spell.name));
+ const concentration=/\bconcentration\b|\bconc\./i.test(spell.duration || '') || /\bconcentration\b/i.test(entry?.duration || '') || entry?.rules?.concentration===true;
+ const higher=Number(entry?.level ?? spell.level)>0 && typeof entry?.higher_level==='string' && !!entry.higher_level.trim();
+ return {concentration,higher};
+}
