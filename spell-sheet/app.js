@@ -8,6 +8,34 @@ const form=document.querySelector('#upload-form'), button=form.querySelector('bu
 const printTools=document.querySelector('.sheet-tools'),emptyState=document.querySelector('#empty-state');
 document.querySelector('#print-sheet').addEventListener('click',()=>window.print());
 const languageSelect=document.querySelector('#summary-language');
+const fontSizeSelect=document.querySelector('#spell-font-size');
+function applyFontSize() {
+  const size=Number(fontSizeSelect.value);
+  if(Number.isInteger(size) && size>=8 && size<=16)document.documentElement.style.setProperty('--spell-font-size',`${size}pt`);
+}
+fontSizeSelect.addEventListener('change',applyFontSize);
+applyFontSize();
+const emphasisSelect=document.querySelector('#emphasis-color');
+const emphasisColors={red:['#b6272e','#8d1c24','#e04a4f'],blue:['#245c9c','#194371','#70a8e6'],green:['#2e6946','#214d33','#70b88b'],purple:['#714494','#51316b','#bc8cdf'],teal:['#176b70','#104d51','#66bac0'],charcoal:['#444950','#292d33','#b7bdc6']};
+function applyEmphasisColor() {
+ const [accent,dark,light]=emphasisColors[emphasisSelect.value] || emphasisColors.purple;
+ const style=document.documentElement.style;
+ for(const [key,value] of Object.entries({'--red':accent,'--red-dark':dark,'--accent-light':light,'--accent-tint':accent+'0d','--accent-border':accent+'40'}))style.setProperty(key,value);
+}
+emphasisSelect.addEventListener('change',applyEmphasisColor);
+applyEmphasisColor();
+const orientationSelect=document.querySelector('#print-orientation');
+const pageStyle=document.createElement('style');
+pageStyle.id='print-page-size';
+document.head.append(pageStyle);
+function applyOrientation() {
+  const orientation=orientationSelect.value==='landscape'?'landscape':'portrait';
+  pageStyle.textContent=`@page { size: A4 ${orientation}; margin: 10mm; }`;
+  document.documentElement.dataset.orientation=orientation;
+}
+orientationSelect.addEventListener('change',applyOrientation);
+applyOrientation();
+
 let libraryPromise,spanishPromise,lastCharacter;
 function englishLibrary() {
   return libraryPromise ||= fetch('./spells.json').then(async response=>{if(!response.ok)throw new Error('Could not load the spell library.');const data=await response.json();if(data.schema_version!==1 || !data.spells)throw new Error('Invalid spell library.');return data;}).catch(error=>{libraryPromise=null;throw error;});
@@ -46,7 +74,7 @@ function render(character,library) {
       const time={'1A':'Action','1BA':'Bonus action','1R':'Reaction','10m':'10 min','1m':'1 min','1h':'1 hr'}[spell.castingTime] || spell.castingTime;
       const indicators=spellIndicators(spell,library);
       const components=[spell.components,spell.ritual?'[R]':'',indicators.concentration?'[C]':'',indicators.higher?'[H]':''].filter(Boolean).join(' · ');
-      rows.push(`<tr class="spell-row"><td><span class="checkbox"></span></td><td>${e(spell.name)}${flags.length?`<div class="spell-flags">${e(flags.join(' · '))}</div>`:''}</td><td>${result.summary?e(result.summary):'<span class="missing-summary">'+(result.status==='ambiguous'?'Summary unavailable: source match is ambiguous.':'Not included in the spell library.')+'</span>'}${mechanics.length?` <span class="mechanics">(${e(mechanics.join(' · '))})</span>`:''}</td><td>${e(time)}${components?`<div class="components">${e(components)}</div>`:''}</td><td>${e(spell.range)}</td><td>${e(spell.duration.replace('Concentration, up to ','C, ').replace(/\bminutes?\b/g,'min').replace(/\bhours?\b/g,'hr'))}</td></tr>`);
+      rows.push(`<tr class="spell-row"><td><span class="checkbox"></span></td><td>${e(spell.name)}${flags.length?`<div class="spell-flags">${e(flags.join(' · '))}</div>`:''}</td><td>${result.summary?e(result.summary):'<span class="missing-summary">'+(result.status==='ambiguous'?'Summary unavailable: source match is ambiguous.':'Not included in the spell library.')+'</span>'}${mechanics.length?` <span class="mechanics">(${e(mechanics.join(' · '))})</span>`:''}</td><td>${e(time)}${components?`<div class="components">${e(components)}</div>`:''}</td><td>${e(spell.range)}</td><td>${e(spell.duration.replace(/Instantaneous/gi,'Instant').replace('Concentration, up to ','C, ').replace(/\bminutes?\b/g,'min').replace(/\bhours?\b/g,'hr'))}</td></tr>`);
     }
   }
   const classes=[...new Map(character.spellcasting.map(c=>[`${c.class}|${c.saveDc}|${c.attackBonus}`,c])).values()];
