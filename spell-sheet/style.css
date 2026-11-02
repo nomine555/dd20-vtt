@@ -42,7 +42,7 @@ td { padding:1mm .8mm; vertical-align:middle; border-bottom:1px solid #e8e5e0; o
 .indicator-key { font-size:9px; color:var(--muted); margin:0 0 2mm; }@media print { .indicator-key { font-size:6.5pt; margin-bottom:1mm; } }
 
 /* Shared by screen and print; the remaining spell columns are exactly 2 pt smaller. */
-:root { --spell-font-size:10pt; --detail-font-size:calc(var(--spell-font-size) - 2pt); }
+:root { --spell-font-size:12pt; --detail-font-size:calc(var(--spell-font-size) - 2pt); }
 #font-size-help { color:var(--muted); font-size:10px; }
 .spell-table .spell-row > td { font-size:var(--detail-font-size); }
 .spell-table .spell-row > td:nth-child(2),
@@ -66,3 +66,5 @@ td { padding:1mm .8mm; vertical-align:middle; border-bottom:1px solid #e8e5e0; o
 :root { --accent-light:#bc8cdf; --accent-tint:#7144940d; --accent-border:#71449440; }
 
 .brand-logo { display:block; width:38px; height:34px; object-fit:contain; flex-shrink:0; }
+
+.print-help { max-width:650px; margin:8px 16px 0 0; color:var(--muted); font-size:11px; line-height:1.5; }
