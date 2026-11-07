@@ -43,6 +43,8 @@ export function attachAbilitySummaries(entries,library,character={}) {
   const rules=detectAbilityRules(entry)||context.rulesEdition;
   entry.summaryReason=match?'Matched: '+match.name:'No clear '+(rules?rules+' ':'')+'SRD match — full PDF text kept. You can write a summary below.';
   entry.textMode=match?'summary':'full';
+  const excluded=/\b(?:fighting\s+style|oath\s+spells|languages?|feats?|skills?|creature\s+type|size|speed|ability\s+score\s+increases?|ability\s+score\s+improvements?|bonus\s+proficienc(?:y|ies)|spellcasting|proficiencies|hit\s+points?)\b/i.test(entry.name);
+  if(excluded || match){entry.destination=excluded?'exclude':'back';entry.selected=!excluded;}
  }
  return entries;
 }
@@ -50,7 +52,8 @@ export function pdfUsageNote(text,language='en') {
  // Preserve character-specific usage counters, not generic rulebook pool sizes.
  const notes=[...String(text).matchAll(/(?:^|\n)[ \t]*(?:[|•*-][ \t]*)?([^\n]*\b\d+\s*\/\s*(?:Short|Long)\s+Rest[^\n]*)/gi)].map(m=>m[1].trim());
  const value=[...new Set(notes)].join('; ');
- return language==='es'?value.replace(/Short Rest/gi,'descanso corto').replace(/Long Rest/gi,'descanso largo'):value;
+ const rest={es:['descanso corto','descanso largo'],fr:['repos court','repos long'],de:['kurze Rast','lange Rast'],it:['riposo breve','riposo lungo'],'pt-BR':['descanso curto','descanso longo']}[language];
+ return rest?value.replace(/Short Rest/gi,rest[0]).replace(/Long Rest/gi,rest[1]):value;
 }
 export function featureSummaryText(entry,language='en') {
  const summary=entry.summaries?.[language];if(!summary)return '';

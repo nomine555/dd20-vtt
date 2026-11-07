@@ -1,7 +1,10 @@
+import {preparePrintEmphasis} from './print-emphasis.js';
+import {applyCharacterPaperVersion} from './character-paper-version.js';
+import {characterPaperLayout} from './paper-layout.js';
 import {applyCharacterBackground} from './character-backgrounds.js';
 import {attachAbilitySummaries} from './ability-summaries.js';
 import {fitCharacterText} from './text-fitting.js';
-import {applyCharacterLanguage} from './character-labels.js';
+import {applyCharacterLanguage,fitCharacterLabels} from './character-labels.js';
 import {selectedFeatureText,backFeatureText,featureListHtml} from './feature-selection.js';
 import {extractCharacterFields,characterSheetHtml} from './character-sheet.js';
 import {preparationLimit} from './preparation.js';
@@ -17,6 +20,7 @@ const languageSelect=document.querySelector('#summary-language');
 const backgroundSelect=document.querySelector('#character-background');
 backgroundSelect.addEventListener('change',()=>applyCharacterBackground(output,backgroundSelect.value));
 const borderlessSelect=document.querySelector('#borderless-print');
+const paperSizeSelect=document.querySelector('#paper-size');
 const fontSizeSelect=document.querySelector('#spell-font-size');
 function applyFontSize() {
   const size=Number(fontSizeSelect.value);
@@ -35,6 +39,7 @@ emphasisSelect.addEventListener('change',applyEmphasisColor);
 applyEmphasisColor();
 const orientationSelect=document.querySelector('#print-orientation');
 borderlessSelect.addEventListener('change',()=>{applyOrientation();requestAnimationFrame(checkCharacterOverflow);});
+paperSizeSelect.addEventListener('change',()=>{applyOrientation();requestAnimationFrame(checkCharacterOverflow);});
 const pageStyle=document.createElement('style');
 pageStyle.id='print-page-size';
 document.head.append(pageStyle);
@@ -42,8 +47,13 @@ function applyOrientation() {
   const orientation=document.body.dataset.sheetMode==='character'?'portrait':orientationSelect.value==='landscape'?'landscape':'portrait';
   document.body.dataset.borderless=String(borderlessSelect.checked);
   const margin=document.body.dataset.sheetMode==='character' && borderlessSelect.checked?'0':'10mm';
-  pageStyle.textContent=`@page { size: A4 ${orientation}; margin: ${margin}; }`;
+  const paper=paperSizeSelect.value==='letter'?'Letter':'A4';
+  pageStyle.textContent=`@page { size: ${paper} ${orientation}; margin: ${margin}; }`;
+  const layout=characterPaperLayout(paperSizeSelect.value,borderlessSelect.checked);
+  const style=document.documentElement.style;
+  for(const [key,value] of Object.entries({'--character-page-ratio':`${layout.pageWidth}/${layout.pageHeight}`,'--character-print-width':layout.pageWidth+'mm','--character-print-height':layout.pageHeight+'mm','--character-content-left':layout.left+'%','--character-content-top':layout.top+'%','--character-content-width':layout.contentWidthPercent+'%','--character-content-height':layout.contentHeightPercent+'%'}))style.setProperty(key,value);
   document.documentElement.dataset.orientation=orientation;
+  applyCharacterPaperVersion(output,paperSizeSelect.value);
 }
 orientationSelect.addEventListener('change',applyOrientation);
 applyOrientation();
@@ -52,21 +62,23 @@ let abilityPromise;
 async function abilityLibrary(){
  return abilityPromise ||= fetch('./abilities.json').then(async r=>{if(!r.ok)throw new Error('Could not load ability summaries.');const d=await r.json();if(d.schema_version!==1 || !Array.isArray(d.abilities))throw new Error('Invalid ability library.');return d;}).catch(e=>{abilityPromise=null;throw e;});
 }
-let libraryPromise,spanishPromise,lastCharacter;
+let libraryPromise,lastCharacter;
+const translationPromises={};
 let sheetMode="spells";
 function englishLibrary() {
   return libraryPromise ||= fetch('./spells.json').then(async response=>{if(!response.ok)throw new Error('Could not load the spell library.');const data=await response.json();if(data.schema_version!==1 || !data.spells)throw new Error('Invalid spell library.');return data;}).catch(error=>{libraryPromise=null;throw error;});
 }
 async function library(language='en') {
   const data=await englishLibrary();
-  if(language==='es') {
-    spanishPromise ||= fetch('./spells.es.json').then(async response=>{
-      if(!response.ok)throw new Error('Could not load Spanish summaries.');
+  if(['es','fr','de','it','pt-BR'].includes(language)) {
+    translationPromises[language] ||= fetch('./spells.'+language+'.json').then(async response=>{
+      if(!response.ok)throw new Error('Could not load '+language+' summaries.');
       const translations=await response.json();
-      if(translations.schema_version!==1 || translations.language!=='es' || !translations.summaries)throw new Error('Invalid Spanish summaries.');
+      if(translations.schema_version!==1 || translations.language!==language || !translations.summaries)throw new Error('Invalid translated summaries.');
       return translations;
-    }).catch(error=>{spanishPromise=null;throw error;});
-    data.translations={es:await spanishPromise};
+    }).catch(error=>{delete translationPromises[language];throw error;});
+    data.translations ||= {};
+    data.translations[language]=await translationPromises[language];
   }
   return data;
 }
@@ -81,7 +93,7 @@ languageSelect.addEventListener('change',async()=>{
 function render(character,library) {
  document.body.dataset.sheetMode=sheetMode;applyOrientation();
  document.querySelector('#character-actions').hidden=sheetMode!=='character';document.querySelector('#character-hint').hidden=sheetMode!=='character';
- if(sheetMode==='character') {output.innerHTML=characterSheetHtml(character.details,languageSelect.value);applyCharacterBackground(output,backgroundSelect.value);requestAnimationFrame(checkCharacterOverflow);document.querySelector('.sheet-tools h2').textContent='Your character sheet';return `Character sheet generated. ${character.details.featureEntries.filter(e=>e.summarySource).length}/${character.details.featureEntries.length} features matched to SRD summaries. Choose placement and Full text / Summary; review matches below. `+(character.details.summaryWarning||'');}
+ if(sheetMode==='character') {output.innerHTML=characterSheetHtml(character.details,languageSelect.value);applyCharacterBackground(output,backgroundSelect.value);applyCharacterPaperVersion(output,paperSizeSelect.value);requestAnimationFrame(checkCharacterOverflow);document.querySelector('.sheet-tools h2').textContent='Your character sheet';return `Character sheet generated. ${character.details.featureEntries.filter(e=>e.summarySource).length}/${character.details.featureEntries.length} features matched to SRD summaries. Choose placement and Full text / Summary; review matches below. `+(character.details.summaryWarning||'');}
  document.querySelector('.sheet-tools h2').textContent='Your spell sheet';
 
   character={...character,spells:uniqueSpellsByName(character.spells)};
@@ -136,7 +148,8 @@ document.querySelector('#character-portrait').addEventListener('change',event=>{
 });
 
 function checkCharacterOverflow(){
- fitCharacterText(output,Number(fontSizeSelect.value),borderlessSelect.checked?201.6:190);
+ fitCharacterLabels(output);
+ fitCharacterText(output,Number(fontSizeSelect.value),characterPaperLayout(paperSizeSelect.value,borderlessSelect.checked).contentWidth);
  const notice=output.querySelector('#character-overflow');if(!notice)return;
  const overflowing=[...output.querySelectorAll('.character-value')].filter(f=>f.value && f.scrollHeight>f.clientHeight+2).map(f=>f.getAttribute('aria-label'));
  notice.textContent=overflowing.length?'Text exceeds the printable area: '+overflowing.join(', ')+'. Move features to the other page or edit the text before printing.':'';
@@ -166,5 +179,5 @@ output.addEventListener('input',event=>{
 });
 
 window.addEventListener("resize",()=>{if(sheetMode==='character')requestAnimationFrame(checkCharacterOverflow);});
-window.addEventListener("beforeprint",()=>{if(sheetMode==='character')checkCharacterOverflow();});
-window.addEventListener("afterprint",()=>{if(sheetMode==='character')requestAnimationFrame(checkCharacterOverflow);});
+window.addEventListener("beforeprint",()=>{if(sheetMode==='character'){checkCharacterOverflow();preparePrintEmphasis(output);}});
+window.addEventListener("afterprint",()=>{output.querySelectorAll('.character-print-text').forEach(el=>el.remove());if(sheetMode==='character')requestAnimationFrame(checkCharacterOverflow);});
