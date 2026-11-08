@@ -179,5 +179,5 @@ output.addEventListener('input',event=>{
 });
 
 window.addEventListener("resize",()=>{if(sheetMode==='character')requestAnimationFrame(checkCharacterOverflow);});
-window.addEventListener("beforeprint",()=>{if(sheetMode==='character'){checkCharacterOverflow();preparePrintEmphasis(output);}});
+window.addEventListener("beforeprint",()=>{if(sheetMode==='character'){checkCharacterOverflow();preparePrintEmphasis(output,lastCharacter?.details?.featureEntries?.map(entry=>entry.name)||[]);}});
 window.addEventListener("afterprint",()=>{output.querySelectorAll('.character-print-text').forEach(el=>el.remove());if(sheetMode==='character')requestAnimationFrame(checkCharacterOverflow);});

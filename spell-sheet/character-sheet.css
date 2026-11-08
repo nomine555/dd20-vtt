@@ -47,3 +47,5 @@
 
 .character-print-text { display:none; }
 @media print { textarea.character-value { display:none!important; }.character-print-text { display:block; white-space:pre-wrap; overflow-wrap:break-word; overflow:hidden; }.character-print-text strong { font-weight:bold; } }
+
+@media print { .character-print-text em { font-style:italic; } }
